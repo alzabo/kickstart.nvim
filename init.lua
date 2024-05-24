@@ -581,6 +581,8 @@ require('lazy').setup({
             },
           },
         },
+
+        zls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -684,6 +686,7 @@ require('lazy').setup({
       -- Adds other completion capabilities.
       --  nvim-cmp does not ship with all sources by default. They are split
       --  into multiple repos for maintenance purposes.
+      'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
     },
@@ -751,6 +754,14 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          {
+            name = 'buffer',
+            option = {
+              get_bufnrs = function()
+                return vim.api.nvim_list_bufs()
+              end,
+            },
+          },
         },
       }
     end,
@@ -818,7 +829,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'go', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'fish', 'go', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'zig' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -846,6 +857,7 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
+  { 'nvim-treesitter/nvim-treesitter-context' },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
@@ -861,7 +873,7 @@ require('lazy').setup({
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -889,6 +901,35 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+-- Return cursor to last position.
+vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
+  group = vim.api.nvim_create_augroup('usercmd-lastpos', { clear = true }),
+  desc = 'return cursor to where it was last time closing the file',
+  pattern = '*',
+  callback = function(args)
+    if string.find(args.file, "COMMIT_.*MSG") then
+      return
+    end
+    vim.cmd('silent! normal! g`"zv')
+  end,
+})
+
+-- Force syntax on
+vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
+  group = vim.api.nvim_create_augroup('usercmds', { clear = true }),
+  desc = 'Force on syntax highlight',
+  pattern = '*',
+  command = [[
+set syntax=on
+]],
+})
+
+-- Set go config
+vim.api.nvim_create_autocmd({ 'FileType' }, {
+  pattern = 'go',
+  command = 'set tabstop=4',
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
