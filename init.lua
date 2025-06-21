@@ -280,19 +280,24 @@ require('lazy').setup({
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>d_', hidden = true },
+        { '<leader>h', group = 'Git [H]unk' },
+        { '<leader>h_', hidden = true },
+        { '<leader>r', group = '[R]ename' },
+        { '<leader>r_', hidden = true },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>s_', hidden = true },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>t_', hidden = true },
+        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>w_', hidden = true },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
+      require('which-key').add {
+        { '<leader>h', desc = 'Git [H]unk', mode = 'v' },
+      }
     end,
   },
 
@@ -909,10 +914,10 @@ vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
   desc = 'return cursor to where it was last time closing the file',
   pattern = '*',
   callback = function(args)
-    if string.find(args.file, "COMMIT_.*MSG") then
+    if string.find(args.file, 'COMMIT_.*MSG') then
       return
     end
-    vim.cmd('silent! normal! g`"zv')
+    vim.cmd 'silent! normal! g`"zv'
   end,
 })
 
@@ -930,6 +935,14 @@ set syntax=on
 vim.api.nvim_create_autocmd({ 'FileType' }, {
   pattern = 'go',
   command = 'set tabstop=4',
+})
+
+-- Set yaml config
+vim.api.nvim_create_autocmd({ 'FileType' }, {
+  pattern = 'yaml',
+  command = [[
+set shiftwidth=2 smarttab
+]],
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
