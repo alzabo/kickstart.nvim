@@ -559,8 +559,6 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
-        gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -572,6 +570,13 @@ require('lazy').setup({
         -- tsserver = {},
         --
 
+        -- keep-sorted start block=yes
+
+        gopls = {},
+        jsonnet_ls = {
+          cmd = { 'jsonnet-language-server', '--jpath', 'jsonnet/lib' },
+        },
+        jsonnetfmt = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -586,8 +591,8 @@ require('lazy').setup({
             },
           },
         },
-
         zls = {},
+        -- keep-sorted end
       }
 
       -- Ensure the servers and tools above are installed
@@ -614,7 +619,8 @@ require('lazy').setup({
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for tsserver)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
+            -- require('lspconfig')[server_name].setup(server)
+            vim.lspconfig.enable(server_name)
           end,
         },
       }
@@ -648,12 +654,14 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        jsonnet = { 'jsonnetfmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         -- javascript = { { "prettierd", "prettier" } },
+        ['*'] = { 'keep-sorted' },
       },
     },
   },
@@ -862,7 +870,26 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
-  { 'nvim-treesitter/nvim-treesitter-context' },
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    config = function()
+      require('treesitter-context').setup {
+        enable = true,
+      }
+    end,
+  },
+  {
+    'Duologic/nvim-jsonnet',
+    config = function()
+      vim.lsp.config('nvim-jsonnet', {
+        --require('nvim-jsonnet').setup {
+        -- Optional configuration
+        jsonnet_bin = 'jsonnet',
+        jsonnet_args = { '-J', 'vendor' },
+        load_lsp_config = true, -- Automatically loads lspconfig for you
+      })
+    end,
+  },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
@@ -947,11 +974,30 @@ set shiftwidth=2 smarttab
 
 -- Set shell/bash config
 vim.api.nvim_create_autocmd({ 'FileType' }, {
-  pattern = 'sh',
+  pattern = { '*.sh', '.bashrc', '.bash_profile' },
   command = [[
 set shiftwidth=4 smarttab
 ]],
 })
 
+vim.lsp.config('jsonnet_ls', {
+  cmd = { 'jsonnet-language-server', '-J', 'jsonnet/lib', '-J', 'k8s/lib' },
+  settings = {
+    jpath = 'jsonnet/lib',
+  },
+})
+
+-- Enable nvim-treesitter-context
+--vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
+--  group = vim.api.nvim_create_augroup('usercmd-tscontext', { clear = true }),
+--  desc = 'Enable TSContext',
+--  pattern = '*',
+--  command = [[
+--TSContext enable
+--]],
+--})
+-- https://github.com/phelipetls/jsonpath.nvim
+
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=2
+-- sts=2 sw=2 et
